@@ -1,0 +1,1 @@
+- [pdf-parse server-side quirks](pdf-parse-quirks.md) — v2 requires canvas/DOM APIs; v1 must be imported via internal path to avoid startup crash
