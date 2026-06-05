@@ -1,0 +1,294 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: resume
+    description: Resume parsing, analysis, and templates
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /resume/parse:
+    post:
+      operationId: parseResume
+      tags: [resume]
+      summary: Parse a PDF resume
+      description: Accepts a PDF file upload and returns structured resume data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ResumeUpload"
+      responses:
+        "200":
+          description: Parsed resume data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParsedResume"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /resume/analyze:
+    post:
+      operationId: analyzeResume
+      tags: [resume]
+      summary: Analyze a resume for ATS compliance and suggestions
+      description: Accepts structured resume data and returns AI-powered analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeAnalysisInput"
+      responses:
+        "200":
+          description: Resume analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeAnalysis"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /resume/templates:
+    get:
+      operationId: getTemplates
+      tags: [resume]
+      summary: Get available resume templates
+      description: Returns list of available resume formatting templates
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResumeTemplate"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    ResumeUpload:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+        - file
+
+    ContactInfo:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        linkedin:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+
+    WorkExperience:
+      type: object
+      properties:
+        company:
+          type: string
+        title:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        bullets:
+          type: array
+          items:
+            type: string
+      required:
+        - company
+        - title
+        - bullets
+
+    Education:
+      type: object
+      properties:
+        institution:
+          type: string
+        degree:
+          type: ["string", "null"]
+        field:
+          type: ["string", "null"]
+        graduationDate:
+          type: ["string", "null"]
+        gpa:
+          type: ["string", "null"]
+      required:
+        - institution
+
+    ParsedResume:
+      type: object
+      properties:
+        contact:
+          $ref: "#/components/schemas/ContactInfo"
+        summary:
+          type: ["string", "null"]
+        workExperience:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkExperience"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/Education"
+        skills:
+          type: array
+          items:
+            type: string
+        certifications:
+          type: array
+          items:
+            type: string
+        rawText:
+          type: string
+      required:
+        - contact
+        - workExperience
+        - education
+        - skills
+        - certifications
+        - rawText
+
+    ResumeAnalysisInput:
+      type: object
+      properties:
+        resume:
+          $ref: "#/components/schemas/ParsedResume"
+      required:
+        - resume
+
+    ATSIssue:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum: [error, warning, info]
+        section:
+          type: string
+        message:
+          type: string
+      required:
+        - severity
+        - section
+        - message
+
+    SectionSuggestion:
+      type: object
+      properties:
+        section:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+      required:
+        - section
+        - suggestions
+
+    ResumeAnalysis:
+      type: object
+      properties:
+        atsScore:
+          type: integer
+        atsSummary:
+          type: string
+        atsIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ATSIssue"
+        sectionSuggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectionSuggestion"
+        overallSuggestions:
+          type: array
+          items:
+            type: string
+        strengths:
+          type: array
+          items:
+            type: string
+      required:
+        - atsScore
+        - atsSummary
+        - atsIssues
+        - sectionSuggestions
+        - overallSuggestions
+        - strengths
+
+    ResumeTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        previewColor:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - previewColor
